@@ -1,0 +1,37 @@
+name: Deploy Micro-SASS Backend
+
+on:
+    push:
+        branches:
+        - main
+        
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: '24'
+            
+            - name: Install dependencies
+              run: npm install
+
+            - name: Build the project
+              run: npm run build
+
+            # - name: Deploy to server
+            #   env:
+            #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            #     SERVER_USER: ${{ secrets.SERVER_USER }}
+            #     SERVER_HOST: ${{ secrets.SERVER_HOST }}
+            #     SERVER_PATH: ${{ secrets.SERVER_PATH }}
+            #   run: |
+            #         echo "$SSH_PRIVATE_KEY" > private_key.pem
+            #         chmod 600 private_key.pem
+            #         scp -i private_key.pem -r ./dist/* $SERVER_USER@$SERVER_HOST:$SERVER_PATH
+            #         rm private_key.pem
