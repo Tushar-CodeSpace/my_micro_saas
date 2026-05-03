@@ -44,7 +44,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             cd ${{ secrets.SERVER_PATH }}
-            bun install
+            bun install --production
             pm2 start ecosystem.config.cjs --env production || pm2 restart ecosystem.config.cjs
           EOF
 
