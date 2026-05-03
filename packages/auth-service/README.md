@@ -1,4 +1,4 @@
-# micro-saas
+# auth-service
 
 To install dependencies:
 

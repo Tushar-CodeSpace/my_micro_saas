@@ -1,4 +1,4 @@
-# micro-saas
+# logger
 
 To install dependencies:
 
