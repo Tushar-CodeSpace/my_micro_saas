@@ -19,34 +19,34 @@ jobs:
       - run: bun install
       - run: bun run build
 
-  build-and-deploy:
-    needs: check-and-build
-    runs-on: ubuntu-latest
+  # build-and-deploy:
+  #   needs: check-and-build
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: oven-sh/setup-bun@v1
 
-      - run: bun install
-      - run: bun run build
+  #     - run: bun install
+  #     - run: bun run build
 
-      - name: Setup SSH key
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
-          chmod 600 key.pem
+  #     - name: Setup SSH key
+  #       run: |
+  #         echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+  #         chmod 600 key.pem
 
-      - name: Copy files to server
-        run: |
-          scp -o StrictHostKeyChecking=no -i key.pem -r ./dist package.json ecosystem.config.cjs \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
+  #     - name: Copy files to server
+  #       run: |
+  #         scp -o StrictHostKeyChecking=no -i key.pem -r ./dist package.json ecosystem.config.cjs \
+  #         ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
 
-      - name: Run app on server
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            cd ${{ secrets.SERVER_PATH }}
-            bun install --production
-            pm2 start ecosystem.config.cjs --env production || pm2 restart ecosystem.config.cjs
-          EOF
+  #     - name: Run app on server
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+  #           cd ${{ secrets.SERVER_PATH }}
+  #           bun install --production
+  #           pm2 start ecosystem.config.cjs --env production || pm2 restart ecosystem.config.cjs
+  #         EOF
 
-      - name: Cleanup
-        run: rm key.pem
+  #     - name: Cleanup
+  #       run: rm key.pem
