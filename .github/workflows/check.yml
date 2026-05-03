@@ -37,7 +37,7 @@ jobs:
 
       - name: Copy files to server
         run: |
-          scp -o StrictHostKeyChecking=no -i key.pem -r ./dist package.json ecosystem.config.js \
+          scp -o StrictHostKeyChecking=no -i key.pem -r ./dist package.json ecosystem.config.cjs \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
 
       - name: Run app on server
@@ -45,7 +45,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             cd ${{ secrets.SERVER_PATH }}
             bun install --production
-            pm2 start ecosystem.config.js --env production || pm2 restart ecosystem.config.js
+            pm2 start ecosystem.config.cjs --env production || pm2 restart ecosystem.config.cjs
           EOF
 
       - name: Cleanup
