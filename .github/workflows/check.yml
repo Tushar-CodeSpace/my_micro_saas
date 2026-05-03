@@ -1,44 +1,52 @@
 name: Deploy Micro-SASS Backend
 
 on:
-    push:
-        branches:
-        - main
-        
+  push:
+    branches:
+      - main
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
+  check-and-build:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: '24'
-            
-            - name: Install Bun
-              run: npm install -g bun
+      - run: bun install
+      - run: bun run build
 
-            - name: Install dependencies
-              run: bun install
+  build-and-deploy:
+    needs: check-and-build
+    runs-on: ubuntu-latest
 
-            - name: Build the project
-              run: bun run build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
 
-            # - name: Deploy to server
-            #   env:
-            #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-            #     SERVER_USER: ${{ secrets.SERVER_USER }}
-            #     SERVER_HOST: ${{ secrets.SERVER_HOST }}
-            #     SERVER_PATH: ${{ secrets.SERVER_PATH }}
-            #   run: |
-            #         echo "$SSH_PRIVATE_KEY" > private_key.pem
-            #         chmod 600 private_key.pem
-            #         scp -i private_key.pem -r ./dist/* $SERVER_USER@$SERVER_HOST:$SERVER_PATH
-            #         rm private_key.pem
+      - run: bun install
+      - run: bun run build
+
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Copy files to server
+        run: |
+          scp -o StrictHostKeyChecking=no -i key.pem -r ./dist package.json ecosystem.config.js \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
+
+      - name: Run app on server
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            cd ${{ secrets.SERVER_PATH }}
+            bun install --production
+            pm2 start ecosystem.config.js --env production || pm2 restart ecosystem.config.js
+          EOF
+
+      - name: Cleanup
+        run: rm key.pem
